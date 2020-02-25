@@ -1,8 +1,4 @@
-//pub mod armv7m;
-//pub mod copy_words;
-//pub mod startup;
-//pub mod stm32;
-use stm32ral::{modify_reg, read_reg, reset_reg, stm32f4::stm32f401, write_reg};
+use stm32ral::{modify_reg, read_reg};
 
 pub struct ClockConfig {
     pub crystal_hz: f32,

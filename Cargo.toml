@@ -12,7 +12,10 @@ cortex-m-rt = "0.6"
 cortex-m-rtfm = "0.5.1"
 panic-itm = "0.4.1"
 #panic-halt = "0.2.0"
-stm32ral = {version = "0.2.0", features = ["stm32f401", "rt", "rtfm"]}
+stm32ral = {version = "0.4.1", features = ["stm32f401", "rt", "rtfm"]}
+
+[patch.crates-io]
+stm32ral = { path = '/home/dirk/rust/projects/stm32ral' }
 
 # this lets you use `cargo fix`!
 [[bin]]
