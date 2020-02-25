@@ -10,7 +10,6 @@
             "targetCreateCommands": [
                 "target create ${workspaceFolder}/target/thumbv7em-none-eabihf/debug/app",
             ],
-            //home/dirk/app/.vscode/itm.log uart off 84000000",
             "processCreateCommands": [
                 "gdb-remote localhost:3333",
                 "target modules load --load --set-pc-to-entry --slide 0 --file ${workspaceFolder}/target/thumbv7em-none-eabihf/debug/app",
