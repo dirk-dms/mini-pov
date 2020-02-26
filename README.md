@@ -22,7 +22,7 @@ To build this project you'll need:
 
 - A Big rechargable LIPO Battery
 
-## Debugging with Visual Studio Code, CodeLLDB, OpenOCD, itmdump and STLINK V2-1
+## Debug with Visual Studio Code, CodeLLDB, OpenOCD, itmdump and STLINK V2-1
 
 - This repo contains a launch.json and tasks.json vor Visual Studio Code.
 
@@ -30,7 +30,7 @@ To build this project you'll need:
 
 - Have a recent (!) OpenOCD installation (0.10.0)
 
-- CodeLLDB now ships its own LLDB wich is recent enouchg for our purposes
+- CodeLLDB now ships its own LLDB wich is recent enough for our purposes
 
 - Itmdump - install with 
 
