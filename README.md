@@ -22,7 +22,7 @@ To build this project you'll need:
 
 - A Big rechargable LIPO Battery
 
-## Debug with Visual Studio Code, CodeLLDB, OpenOCD, itmdump and STLINK V2-1
+## Debug with VSCode, CodeLLDB, OpenOCD, itmdump and STLINK V2-1
 
 - This repo contains a launch.json and tasks.json vor Visual Studio Code.
 
@@ -54,8 +54,8 @@ $ itmdump -f .vscode/itm.log -F
 
 2. Start OpenOCD in a separate terminal
 
-I picked an openocd board config file which fits our setup too.
-It has an onboard STLink V2-1 and also an Stm32F4xx family chip.
+> I picked an openocd board config file which fits our setup too.
+> It has an onboard STLink V2-1 and also an Stm32F4xx family chip.
 
 ``` console
 $ openocd -c "gdb_port 3333" -s "/home/dirk/rust/projects/mini-pov/" -f ../scripts/board/stm32f429disc1.cfg
