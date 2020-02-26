@@ -6,11 +6,11 @@ pub fn clocksetup(rcc: &stm32ral::rcc::Instance, flash: &stm32ral::flash::Instan
         crystal_hz: 8000000.0,
         crystal_divisor: 4,
         pll_multiplier: 168,
-        general_divisor: crate::stm32f401::rcc::PLLCFGR::PLLP::RW::Div4,
+        general_divisor: stm32ral::rcc::PLLCFGR::PLLP::RW::Div4,
         pll48_divisor: 7,
-        ahb_divisor: crate::stm32f401::rcc::CFGR::HPRE::RW::Div1,
-        apb1_divisor: crate::stm32f401::rcc::CFGR::PPRE1::RW::Div2,
-        apb2_divisor: crate::stm32f401::rcc::CFGR::PPRE2::RW::Div1,
+        ahb_divisor: stm32ral::rcc::CFGR::HPRE::RW::Div1,
+        apb1_divisor: stm32ral::rcc::CFGR::PPRE1::RW::Div2,
+        apb2_divisor: stm32ral::rcc::CFGR::PPRE2::RW::Div1,
         flash_latency: 2, //2 wait states for 84MHz at 3.3V.
     };
     crate::util::configure_clocks(rcc, flash, &myclock_config);
@@ -35,6 +35,7 @@ pub fn timerconfig(
     tim3: &stm32ral::tim3::Instance,
     tim4: &stm32ral::tim4::Instance,
 ) {
+    const PRESCALER: u32 = 0x3FFF;
     //Enable Timer clocks
     modify_reg!(
         stm32ral::rcc,
@@ -46,7 +47,7 @@ pub fn timerconfig(
     );
     //TIM3 configuration
     //Prescaler for TIM3 divide by 2^16
-    modify_reg!(stm32ral::tim3, tim3, PSC, PSC: 0xFFFF);
+    modify_reg!(stm32ral::tim3, tim3, PSC, PSC: PRESCALER);
     //Onepulse mode, preload, not enabled, up
     modify_reg!(
         stm32ral::tim3,
@@ -79,22 +80,10 @@ pub fn timerconfig(
     modify_reg!(stm32ral::tim3, tim3, CCR2, CCR: 0x3FFF);
     //Create an update event to auto reload the preload values
     write_reg!(stm32ral::tim3, tim3, EGR, UG: Update);
-    //Clear all TIM3 interupt Flags
-    write_reg!(
-        stm32ral::tim3,
-        tim3,
-        SR,
-        TIF: Clear,
-        UIF: Clear,
-        CC1IF: Clear,
-        CC2IF: Clear,
-        CC3IF: Clear,
-        CC4IF: Clear
-    );
 
     //TIM2 configuration
     //Prescaler for TIM2 divide by 2^16
-    modify_reg!(stm32ral::tim2, tim2, PSC, PSC: 0xFFFF);
+    modify_reg!(stm32ral::tim2, tim2, PSC, PSC: PRESCALER);
     // preload, not enabled, up
     modify_reg!(
         stm32ral::tim2,
@@ -123,22 +112,10 @@ pub fn timerconfig(
     modify_reg!(stm32ral::tim2, tim2, CCR2, CCR: 0x0FFF);
     //Create an update event to auto reload the preload values
     write_reg!(stm32ral::tim2, tim2, EGR, UG: Update);
-    //Clear all TIM2 interupt Flags
-    write_reg!(
-        stm32ral::tim2,
-        tim2,
-        SR,
-        TIF: Clear,
-        UIF: Clear,
-        CC1IF: Clear,
-        CC2IF: Clear,
-        CC3IF: Clear,
-        CC4IF: Clear
-    );
 
     //TIM4 configuration
     //Prescaler for TIM4 divide by 2^16
-    modify_reg!(stm32ral::tim4, tim4, PSC, PSC: 0xFFFF);
+    modify_reg!(stm32ral::tim4, tim4, PSC, PSC: PRESCALER);
     // preload, not enabled, up
     modify_reg!(
         stm32ral::tim4,
@@ -178,30 +155,6 @@ pub fn timerconfig(
         CC4IF: Clear
     );
 
-    //Enable TIM3 interuupts for CC2 and update events, disable all other interrupts
-    modify_reg!(
-        stm32ral::tim3,
-        tim3,
-        DIER,
-        CC1IE: Disabled,
-        CC2IE: Enabled,
-        CC3IE: Disabled,
-        CC4IE: Disabled,
-        TIE: Disabled,
-        UIE: Enabled
-    );
-    //Enable TIM2 interuupts for CC2 and update events, disable all other interrupts
-    modify_reg!(
-        stm32ral::tim2,
-        tim2,
-        DIER,
-        CC1IE: Disabled,
-        CC2IE: Enabled,
-        CC3IE: Disabled,
-        CC4IE: Disabled,
-        TIE: Disabled,
-        UIE: Enabled
-    );
     //Enable TIM4 interuupts for CC2 and update events, disable all other interrupts
     modify_reg!(
         stm32ral::tim4,
