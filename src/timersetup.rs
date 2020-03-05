@@ -1,20 +1,5 @@
 use stm32ral::{modify_reg, write_reg};
 
-pub fn clocksetup(rcc: &stm32ral::rcc::Instance, flash: &stm32ral::flash::Instance) {
-    //84MHz CPU/AHB/APB2, 42 MHz APB1, 48 MHz SDIO / USB clock
-    let myclock_config: crate::util::ClockConfig = crate::util::ClockConfig {
-        crystal_hz: 8000000.0,
-        crystal_divisor: 4,
-        pll_multiplier: 168,
-        general_divisor: stm32ral::rcc::PLLCFGR::PLLP::RW::Div4,
-        pll48_divisor: 7,
-        ahb_divisor: stm32ral::rcc::CFGR::HPRE::RW::Div1,
-        apb1_divisor: stm32ral::rcc::CFGR::PPRE1::RW::Div2,
-        apb2_divisor: stm32ral::rcc::CFGR::PPRE2::RW::Div1,
-        flash_latency: 2, //2 wait states for 84MHz at 3.3V.
-    };
-    crate::util::configure_clocks(rcc, flash, &myclock_config);
-}
 pub fn timer234debugstop(dbgmcu: &stm32ral::dbgmcu::Instance) {
     // Stop timer 2,3,4 on debug halt for better debugging
     modify_reg!(stm32ral::dbgmcu, dbgmcu, APB1_FZ, DBG_TIM2_STOP: 1, DBG_TIM3_STOP: 1, DBG_TIM4_STOP: 1);

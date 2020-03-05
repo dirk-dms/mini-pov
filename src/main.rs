@@ -1,4 +1,3 @@
-#![deny(unsafe_code)]
 #![no_main]
 #![no_std]
 //#![deny(warnings)]
@@ -10,20 +9,29 @@ use rtfm::app;
 use stm32ral::{gpio, tim4};
 use stm32ral::{read_reg, write_reg};
 
-mod hwsetup;
+#[macro_use]
 mod util;
+
+mod clocksetup;
+mod dmasetup;
+mod timersetup;
+
+pub const BUFLEN: usize = 3 * 6;
+
+pub struct Doublebuffer {
+    pub a: [u8; BUFLEN],
+    pub b: [u8; BUFLEN],
+}
 
 #[app(device = stm32ral::stm32f4::stm32f401, peripherals = true)]
 const APP: () = {
     struct Resources {
-        // A resource
-        //#[init(0)]
-        //shared: u32,
-
         //Late Ressource
+        mydoublebuffer: Doublebuffer,
         mygpiob: stm32ral::gpio::Instance,
         myitm: cortex_m::peripheral::ITM,
         mytim4: stm32ral::tim4::Instance,
+        mydma: stm32ral::dma::Instance,
     }
 
     #[init]
@@ -37,21 +45,31 @@ const APP: () = {
         let mytim3 = cx.device.TIM3;
         let mytim4 = cx.device.TIM4;
         let myitm = cx.core.ITM;
+        let mydma = cx.device.DMA1;
+        let myuart = cx.device.USART1;
+        let mydoublebuffer = Doublebuffer {
+            a: [0xC3; BUFLEN],
+            b: [0xA5; BUFLEN],
+        };
 
         // Configure our clocks
-        hwsetup::clocksetup(&myrcc, &myflash);
+        clocksetup::clocksetup(&myrcc, &myflash);
         // Stop all timers on debug halt for better debugging
-        hwsetup::timer234debugstop(&mydbgmcu);
+        timersetup::timer234debugstop(&mydbgmcu);
         // Setup GPIOB (LEDs and timer3 CC1 input)
-        hwsetup::portconfig(&myrcc, &mygpiob);
+        timersetup::portconfig(&myrcc, &mygpiob);
         // Setup timers
-        hwsetup::timerconfig(&myrcc, &mytim2, &mytim3, &mytim4);
+        timersetup::timerconfig(&myrcc, &mytim2, &mytim3, &mytim4);
+        // Setup dma
+        dmasetup::dmaconfig(&myrcc, &mydma, &myuart, &mydoublebuffer);
 
         //Return the now initialized Late Ressources
         init::LateResources {
             myitm,
             mygpiob,
             mytim4,
+            mydma,
+            mydoublebuffer,
         }
     }
 
@@ -87,15 +105,16 @@ const APP: () = {
         });*/
     }
 
-    #[task(binds = DMA1_STREAM6, priority=3, resources = [myitm, mygpiob])]
+    #[task(binds = DMA1_STREAM6, priority=3, resources = [myitm, mygpiob, mydma, mydoublebuffer])]
     fn dma_handler(cx: dma_handler::Context) {
-        static mut GREENLEDSTATE: bool = true;
-        if *GREENLEDSTATE {
+        static mut A_DONE_USING_B: bool = true;
+
+        if *A_DONE_USING_B {
             write_reg!(gpio, cx.resources.mygpiob, BSRR, BS12: Set); //green on
         } else {
             write_reg!(gpio, cx.resources.mygpiob, BSRR, BR12: Reset); //green off
         }
-        *GREENLEDSTATE = !*GREENLEDSTATE;
+        *A_DONE_USING_B = !*A_DONE_USING_B;
         //cortex_m::iprintln!(&mut cx.resources.myitm.stim[0], "D");
     }
 };
