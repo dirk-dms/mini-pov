@@ -20,7 +20,18 @@ pub fn timerconfig(
     tim3: &stm32ral::tim3::Instance,
     tim4: &stm32ral::tim4::Instance,
 ) {
-    const PRESCALER: u32 = 0x3FFF;
+    const SPIDIV: u32 = 16;
+    const BYTEDIV: u32 = SPIDIV * 8;
+
+    const TIM4PERIOD: u32 = 2; //period is 2, generate 1 DMA strobe per Byte / Update event
+    const TIM4DIV: u32 = BYTEDIV / TIM4PERIOD; //count at double the bytefrequency
+
+    const TIM2PERIOD: u32 = 16; //16*4 = 64 Bytes intervall with 28 Bytes data
+    const TIM2DIV: u32 = BYTEDIV * 4; //counts in 4 Byte steps
+
+    const TIM3PERIOD: u32 = 129; //128 collums image and one collumn off
+    const TIM3DIV: u32 = TIM2DIV * TIM2PERIOD; //counts image collumns
+
     //Enable Timer clocks
     modify_reg!(
         stm32ral::rcc,
@@ -31,8 +42,8 @@ pub fn timerconfig(
         TIM4EN: Enabled
     );
     //TIM3 configuration
-    //Prescaler for TIM3 divide by 2^16
-    modify_reg!(stm32ral::tim3, tim3, PSC, PSC: PRESCALER);
+    //Prescaler for TIM3
+    modify_reg!(stm32ral::tim3, tim3, PSC, PSC: TIM3DIV);
     //Onepulse mode, preload, not enabled, up
     modify_reg!(
         stm32ral::tim3,
@@ -59,16 +70,16 @@ pub fn timerconfig(
     modify_reg!(stm32ral::tim3, tim3, SMCR, SMS: Trigger_Mode);
     //PWM mode 2 with preload for OC2
     modify_reg!(stm32ral::tim3, tim3, CCMR1, OC2M: 0b111, OC2PE: 1);
-    //Period 0xFFFF
-    modify_reg!(stm32ral::tim3, tim3, ARR, ARR: 0xFFFF);
-    //Delay afte 1/4 period go high
-    modify_reg!(stm32ral::tim3, tim3, CCR2, CCR: 0x3FFF);
+    //Period 129
+    modify_reg!(stm32ral::tim3, tim3, ARR, ARR: TIM3PERIOD - 1);
+    //Delay afte 1 off, 128 on period go high
+    modify_reg!(stm32ral::tim3, tim3, CCR2, CCR: 1);
     //Create an update event to auto reload the preload values
     write_reg!(stm32ral::tim3, tim3, EGR, UG: Update);
 
     //TIM2 configuration
-    //Prescaler for TIM2 divide by 2^16
-    modify_reg!(stm32ral::tim2, tim2, PSC, PSC: PRESCALER);
+    //Prescaler for TIM2
+    modify_reg!(stm32ral::tim2, tim2, PSC, PSC: TIM2DIV);
     // preload, not enabled, up
     modify_reg!(
         stm32ral::tim2,
@@ -91,16 +102,16 @@ pub fn timerconfig(
     modify_reg!(stm32ral::tim2, tim2, SMCR, SMS: Gated_Mode);
     //PWM mode 2 with preload for OC2
     modify_reg!(stm32ral::tim2, tim2, CCMR1, OC2M: 0b111, OC2PE: 1);
-    //Period 0x3FFF
-    modify_reg!(stm32ral::tim2, tim2, ARR, ARR: 0x3FFF);
-    //Delay after 1/4 period go high
-    modify_reg!(stm32ral::tim2, tim2, CCR2, CCR: 0x0FFF);
+    //Period is 16
+    modify_reg!(stm32ral::tim2, tim2, ARR, ARR: TIM2PERIOD - 1);
+    //16-9 = 7 counts high (a 4 bytes = 28 Bytes)
+    modify_reg!(stm32ral::tim2, tim2, CCR2, CCR: 9);
     //Create an update event to auto reload the preload values
     write_reg!(stm32ral::tim2, tim2, EGR, UG: Update);
 
     //TIM4 configuration
-    //Prescaler for TIM4 divide by 2^16
-    modify_reg!(stm32ral::tim4, tim4, PSC, PSC: PRESCALER);
+    //Prescaler for TIM4
+    modify_reg!(stm32ral::tim4, tim4, PSC, PSC: TIM4DIV);
     // preload, not enabled, up
     modify_reg!(
         stm32ral::tim4,
@@ -121,10 +132,10 @@ pub fn timerconfig(
     modify_reg!(stm32ral::tim4, tim4, SMCR, SMS: Gated_Mode);
     //PWM mode 2 with preload for OC2
     modify_reg!(stm32ral::tim4, tim4, CCMR1, OC2M: 0b111, OC2PE: 1);
-    //Period 0x07FF
-    modify_reg!(stm32ral::tim4, tim4, ARR, ARR: 0x07FF);
+    //Period 0x01
+    modify_reg!(stm32ral::tim4, tim4, ARR, ARR: TIM4PERIOD - 1);
     //Delay after 1/2 period go high
-    modify_reg!(stm32ral::tim4, tim4, CCR2, CCR: 0x03FF);
+    modify_reg!(stm32ral::tim4, tim4, CCR2, CCR: 0x1);
     //Create an update event to auto reload the preload values
     write_reg!(stm32ral::tim4, tim4, EGR, UG: Update);
     //Clear all TIM4 interupt Flags

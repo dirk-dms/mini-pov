@@ -3,7 +3,7 @@ use stm32ral::{modify_reg, read_reg, write_reg};
 pub fn dmaconfig(
     rcc: &stm32ral::rcc::Instance,
     dma: &stm32ral::dma::Instance,
-    uart: &stm32ral::usart::Instance,
+    spi: &stm32ral::spi::Instance,
     buf: &super::Doublebuffer,
 ) {
     //const PRESCALER: u32 = 0x3FFF;
@@ -25,7 +25,7 @@ pub fn dmaconfig(
         CTEIF6: Clear
     );
     //set the USART Data register as DMA destination
-    write_reg!(stm32ral::dma, dma, PAR6, &uart.DR as *const _ as u32);
+    write_reg!(stm32ral::dma, dma, PAR6, &spi.DR as *const _ as u32);
     //set the Buffer A as DMA Doublebuffer 0 source
     write_reg!(stm32ral::dma, dma, M0AR6, &buf.a as *const _ as u32);
     //set the Buffer B as DMA Doublebuffer 1 source

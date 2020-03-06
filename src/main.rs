@@ -16,7 +16,9 @@ mod clocksetup;
 mod dmasetup;
 mod timersetup;
 
-pub const BUFLEN: usize = 3 * 6;
+pub const ROWS: usize = 3; //128
+pub const BYTESPERROW: usize = 28;
+pub const BUFLEN: usize = ROWS * BYTESPERROW;
 
 pub struct Doublebuffer {
     pub a: [u8; BUFLEN],
@@ -46,7 +48,7 @@ const APP: () = {
         let mytim4 = cx.device.TIM4;
         let myitm = cx.core.ITM;
         let mydma = cx.device.DMA1;
-        let myuart = cx.device.USART1;
+        let myspi = cx.device.SPI1;
         let mydoublebuffer = Doublebuffer {
             a: [0xC3; BUFLEN],
             b: [0xA5; BUFLEN],
@@ -61,7 +63,7 @@ const APP: () = {
         // Setup timers
         timersetup::timerconfig(&myrcc, &mytim2, &mytim3, &mytim4);
         // Setup dma
-        dmasetup::dmaconfig(&myrcc, &mydma, &myuart, &mydoublebuffer);
+        dmasetup::dmaconfig(&myrcc, &mydma, &myspi, &mydoublebuffer);
 
         //Return the now initialized Late Ressources
         init::LateResources {
