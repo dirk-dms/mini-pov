@@ -7,6 +7,9 @@ This is a work in progress and by no means finished yet...
 ## The basic idea 
 
 > We strap the pcb and LEDs and powersupply to the back of the fan and fix the blades on the ground. 
+> So our electronics and powersupply will rotate together with the fan enclosure and we won't need 
+> sliding contacts for powersupply etc. 
+> The esperuino pico has a onboard FET to drive high current sources like our fan.
 > The fan will turn with ~50Hz and generate 2 tacho pulses per revolution to synchronize the video. 
 > The leds are mounted vertically so we get a cylindrical display. 
 > Since the PCB rotates we'll auto shut down the fan after a minute or so.
@@ -21,16 +24,15 @@ This is a work in progress and by no means finished yet...
 > Command bytes plus 12*2 Byes PWM values get sent to the SPI Port.
 > 
 > Each single DMA transfer writes the whole image to the spi port. 
-> The DMA transfer complete interrupt can then advance the buffer pointer 
-> from the just finished buffer to next framebuffer. 
-> In the background task we will actually have tripple buffering, 
-> one Buffer being displayed, a next Buffer that is already prepared,
-> and a third one under construction by the background task.
+> The DMA transfer complete interrupt can then update the contents of the inactive (just finished) buffer. 
 > 
-> 12 * 60 Pixels resolution will be ok for some scrolling text,
-> so we'll need some Character Fonts stored somewhere too.
+> 12 * 120 Pixels resolution will be ok for some scrolling text,
+> so we'll probably want some Character Fonts stored somewhere too.
 > Internally we'll work with 8 Bit brightness values and 
-> gamma correction will map them to 16 bit pwm values.
+> gamma correction will map them to 9 bit pwm values.
+> We'll use the faster segmented 9 bit mode since our pixel duration 
+> will only last for about 1000 clock cycles. A 512 cycle PWM period will 
+> fit aprox two times during a pixel-period, no sense having a longer pwm period.
 
 ## Required Software
 
