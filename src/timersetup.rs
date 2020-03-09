@@ -13,6 +13,15 @@ pub fn portconfig(rcc: &stm32ral::rcc::Instance, gpio: &stm32ral::gpio::Instance
     modify_reg!(stm32ral::gpio, gpio, AFRL, AFRL4: AF2);
     //set alternate function mode for pin b4 (trigger input TIM3_CC1)
     modify_reg!(stm32ral::gpio, gpio, MODER, MODER4: Alternate);
+
+    //set open drain output mode for pin B0 (FET control) for the FAN
+    // drive '0' for off, high Z is on.
+    //write_reg!(stm32ral::gpio, gpio, BSRR, BR0: Reset); //0 is 0 = FAN on
+
+    write_reg!(stm32ral::gpio, gpio, BSRR, BS0: Set); //1 is High Z = FAN off
+    modify_reg!(stm32ral::gpio, gpio, PUPDR, PUPDR0: PullUp);
+    modify_reg!(stm32ral::gpio, gpio, OTYPER, OT0: OpenDrain);
+    modify_reg!(stm32ral::gpio, gpio, MODER, MODER0: Output);
 }
 pub fn timerconfig(
     rcc: &stm32ral::rcc::Instance,
@@ -138,31 +147,6 @@ pub fn timerconfig(
     modify_reg!(stm32ral::tim4, tim4, CCR2, CCR: 0x1);
     //Create an update event to auto reload the preload values
     write_reg!(stm32ral::tim4, tim4, EGR, UG: Update);
-    //Clear all TIM4 interupt Flags
-    write_reg!(
-        stm32ral::tim4,
-        tim4,
-        SR,
-        TIF: Clear,
-        UIF: Clear,
-        CC1IF: Clear,
-        CC2IF: Clear,
-        CC3IF: Clear,
-        CC4IF: Clear
-    );
-
-    //Enable TIM4 interuupts for CC2 and update events, disable all other interrupts
-    modify_reg!(
-        stm32ral::tim4,
-        tim4,
-        DIER,
-        CC1IE: Disabled,
-        CC2IE: Enabled,
-        CC3IE: Disabled,
-        CC4IE: Disabled,
-        TIE: Disabled,
-        UIE: Enabled
-    );
 
     //Enable TIM4 DMA requests from Update event
     modify_reg!(stm32ral::tim4, tim4, DIER, UDE: Enabled);
