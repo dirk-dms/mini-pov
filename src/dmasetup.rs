@@ -4,7 +4,8 @@ pub fn dmaconfig(
     rcc: &stm32ral::rcc::Instance,
     dma: &stm32ral::dma::Instance,
     spi: &stm32ral::spi::Instance,
-    buf: &super::Doublebuffer,
+    bufa: u32,
+    bufb: u32
 ) {
     //const PRESCALER: u32 = 0x3FFF;
     //Enable DMA1 clocks
@@ -27,9 +28,9 @@ pub fn dmaconfig(
     //set the USART Data register as DMA destination
     write_reg!(stm32ral::dma, dma, PAR6, &spi.DR as *const _ as u32);
     //set the Buffer A as DMA Doublebuffer 0 source
-    write_reg!(stm32ral::dma, dma, M0AR6, &buf.a as *const _ as u32);
+    write_reg!(stm32ral::dma, dma, M0AR6, bufa);
     //set the Buffer B as DMA Doublebuffer 1 source
-    write_reg!(stm32ral::dma, dma, M1AR6, &buf.b as *const _ as u32);
+    write_reg!(stm32ral::dma, dma, M1AR6, bufb);
     //set the Number of bytes to transfer
     write_reg!(stm32ral::dma, dma, NDTR6, super::BUFLEN as u32);
     //select the DMA channel 2 for stream 6, DMA Flow controller, Prio=high
