@@ -14,10 +14,19 @@ pub fn portconfig(rcc: &stm32ral::rcc::Instance, gpio: &stm32ral::gpio::Instance
     //set alternate function mode for pin b4 (trigger input TIM3_CC1)
     modify_reg!(stm32ral::gpio, gpio, MODER, MODER4: Alternate);
 
+    //select alternate function number AF5 for pin PB15 (SPI2_MOSI)
+    modify_reg!(stm32ral::gpio, gpio, AFRH, AFRH15: AF5);
+    //set alternate function mode for pin b15 (SPI2 MOSI)
+    modify_reg!(stm32ral::gpio, gpio, MODER, MODER15: Alternate);
+
+    //select alternate function number AF5 for pin PB13 (SPI2_SCK)
+    modify_reg!(stm32ral::gpio, gpio, AFRH, AFRH13: AF5);
+    //set alternate function mode for pin b13 (SPI2 SCK)
+    modify_reg!(stm32ral::gpio, gpio, MODER, MODER13: Alternate);
+
     //set open drain output mode for pin B0 (FET control) for the FAN
     // drive '0' for off, high Z is on.
     //write_reg!(stm32ral::gpio, gpio, BSRR, BR0: Reset); //0 is 0 = FAN on
-
     write_reg!(stm32ral::gpio, gpio, BSRR, BS0: Set); //1 is High Z = FAN off
     modify_reg!(stm32ral::gpio, gpio, PUPDR, PUPDR0: PullUp);
     modify_reg!(stm32ral::gpio, gpio, OTYPER, OT0: OpenDrain);
