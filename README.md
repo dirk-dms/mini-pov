@@ -24,14 +24,17 @@ This is a work in progress and by no means finished yet...
 > Command bytes plus 12*2 Byes PWM values get sent to the SPI Port.
 > 
 > Each single DMA transfer writes the whole image to the spi port. 
-> The DMA transfer complete interrupt can then update the contents of the inactive (just finished) buffer. 
+> The DMA transfer complete interrupt can then hand back the pointer to the buffer to the idle task
+> which can then update the contents of the inactive (just finished) buffer. 
 > 
-> 12 * 120 Pixels resolution will be ok for some scrolling text,
+> 12 * 128 Pixels resolution will be ok for some scrolling text,
 > so we'll probably want some Character Fonts stored somewhere too.
 > Internally we'll work with 8 Bit brightness values and 
 > gamma correction will map them to 9 bit pwm values.
-> We'll use the faster segmented 9 bit mode since our pixel duration 
-> will only last for about 1000 clock cycles. A 512 cycle PWM period will 
+> those 9 bits get mapped to the 16 bit PWM values so that 
+> the "on"-duration in each of the 128 segments is the same.
+> we only use the first two segments anyway before reprogramming for the next pixel. 
+> Our pixel duration will equal about 1000 clock cycles. A 512 cycle PWM period will 
 > fit aprox two times during a pixel-period, no sense having a longer pwm period.
 
 ## Required Software
@@ -86,18 +89,16 @@ $ itmdump -f .vscode/itm.log -F
 
 2. Start OpenOCD in a separate terminal
 
-> I picked an openocd board config file which fits our setup too.
-> It has an onboard STLink V2-1 and also an Stm32F4xx family chip.
+> I picked an openocd board config file which aproximately fits our setup.
+> (It has an onboard STLink V2-1 and also an Stm32F4xx family chip.)
 
 ``` console
 $ openocd -c "gdb_port 3333" -s "/home/dirk/rust/projects/mini-pov/" -f ../scripts/board/stm32f429disc1.cfg
 ```
 
-4. Debug your programm from vscode
+4. Debug your program from vscode
 
-``` console
-$ cargo build
-```
+Enjoy!
 
 # License
 
