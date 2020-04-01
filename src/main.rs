@@ -27,6 +27,7 @@ mod util;
 mod clocksetup;
 mod dmasetup;
 mod timersetup;
+mod spisetup;
 
 pub const ROWS: usize = 128; //128
 pub const U16PERROW: usize = 14;
@@ -88,19 +89,19 @@ const APP: () = {
         timersetup::portconfig(&myrcc, &mygpiob);
         // Setup timers
         timersetup::timerconfig(&myrcc, &mytim2, &mytim3, &mytim4);
+        // Setup SPI
+        spisetup::spiconfig(&myrcc, &myspi);
+ 
         // Setup dma
-
         let mut dmabufa = DMAbuffer([0; BUFLEN]);
         let mut dmabufb = DMAbuffer([0; BUFLEN]);
         let mut dmabufc = DMAbuffer([0; BUFLEN]);
-        //Safety these raw pointers point to static initialized Memory buffers so they are always valid
-        //They get passed back and forth between idle and interrrupt handler 
+        // Safety these raw pointers point to static initialized Memory buffers so they are always valid
+        // They get passed back and forth between idle and interrrupt handler 
         // and only the code wich has the pointer can access the buffer.
         let bufrefa = &mut dmabufa as *const _ as u32;
         let bufrefb = &mut dmabufb as *const _ as u32;
         let bufrefc = &mut dmabufc as *const _ as u32;
-   
-
         dmasetup::dmaconfig(&myrcc, &mydma, &myspi, bufrefa, bufrefb);
 
         //Set up two SPSCs to pass around ownership of the DMA buffer pointers
@@ -136,7 +137,12 @@ const APP: () = {
         loop {
             if let Some(next_buffer) = cx.resources.idle_consumer.dequeue() {
                 // Prepare the next Buffer
-                
+
+
+
+
+
+
                 // compiler fence we *really make sure all other threads / cores / interupt handlers / DMAs <= we need this
                 // observe any changes made in the code until now.
                 // i.e. This prevents reordering load/stores accross this fence and compiles down to a dmb with memory clobber
