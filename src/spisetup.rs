@@ -24,13 +24,15 @@ pub fn spiconfig(
     );
 
     // we only need tx on first rising edge data is already stable and latched
+    // since APB1 is already half the clock speed compared to AHB1 
+    // we only divide by 8 and not by 16 to get 6MBit SPI Line speed
     write_reg!(
         stm32ral::spi,
         spi,
         CR1,
         BIDIMODE: Unidirectional,
         BIDIOE: OutputEnabled,
-        BR: Div16,
+        BR: Div8,
         CPHA: FirstEdge,
         CPOL: IdleLow,
         CRCEN: Disabled,

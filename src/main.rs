@@ -47,10 +47,8 @@ const APP: () = {
         dmabufa: DMAbuffer,
         dmabufb: DMAbuffer,
         dmabufc: DMAbuffer,
-
         mygpiob: stm32ral::gpio::Instance,
         myitm: cortex_m::peripheral::ITM,
-        //mytim4: stm32ral::tim4::Instance,
         mydma: stm32ral::dma::Instance,
         dma_int_consumer: Consumer<'static, u32, U2,>,
         idle_consumer: Consumer<'static, u32, U2,>,
@@ -120,7 +118,6 @@ const APP: () = {
         init::LateResources {
             myitm,
             mygpiob,
-            //mytim4,
             mydma,
             idle_producer, 
             dma_int_consumer,
