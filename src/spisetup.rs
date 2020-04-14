@@ -42,7 +42,7 @@ pub fn spiconfig(
         MSTR: Master,
         RXONLY: FullDuplex,
         SPE: Enabled,
-        SSI: SlaveSelected,
-        SSM: Disabled
+        SSI: SlaveNotSelected,
+        SSM: Enabled
     ); 
 }

@@ -29,16 +29,46 @@ mod dmasetup;
 mod timersetup;
 mod spisetup;
 
-pub const ROWS: usize = 128; //128
+pub const COLS: usize = 128; //128
 pub const U16PERROW: usize = 14;
-pub const BUFLEN: usize = ROWS * U16PERROW;
-
-pub const LEDCMD: [u16; 2] = [0x945F, 0xFFFF];
+pub const BUFLEN: usize = COLS * U16PERROW;
 
 #[repr(align(128))]
 pub struct DMAbuffer (
     [u16; BUFLEN]
 );
+
+impl DMAbuffer {
+    //CMD 0x25, OUTTMG=0, EXTCLK=0,TMGRST=0, DSPRPT=1, BLANK=0, BC=1FFFFF
+    //const LEDCMD: [u16; 2] = [0x945F, 0xFFFF];
+    
+    //CMD 0x25, OUTTMG=0, EXTCLK=0,TMGRST=1, DSPRPT=0, BLANK=0, BC=1FFFFF
+    const LEDCMD: [u16; 2] = [0x949F, 0xFFFF];    
+        
+    //var gamma = new Uint16Array(256);
+    //for (var i=0.0;i<256;i=i+1.0) gamma[i]=Math.round(Math.pow(i/255.0,2.8)*65535);
+    //16 gamma corrected Brightness values 
+    const GAMMA: [u16; 16] = [0, 33, 232, 723, 1619, 3024, 5038, 7757,
+                              11274, 15678, 21058, 27499, 35085, 43899, 54023, 65535];
+
+    fn clear_col(self: &mut Self, col: usize) {
+        self.0[col * 14] = DMAbuffer::LEDCMD[0];
+        self.0[col * 14 + 1] = DMAbuffer::LEDCMD[1];
+        for i in 2..14 {
+            self.0[col * 14 + i] = DMAbuffer::GAMMA[0];
+        }
+    }
+    fn setpixel(self: &mut Self, col: usize, row: usize, val : usize) {
+        self.0[col * 14 + row + 2] = DMAbuffer::GAMMA[val];
+    }
+    fn set_col(self: &mut Self, col: usize) {
+        self.0[col * 14] = DMAbuffer::LEDCMD[0];
+        self.0[col * 14 + 1] = DMAbuffer::LEDCMD[1];
+        for i in 2..14 {
+            self.0[col * 14 + i] = DMAbuffer::GAMMA[15];
+        }
+    }
+}
 
 #[app(device = stm32ral::stm32f4::stm32f401, peripherals = true)]
 const APP: () = {
@@ -70,17 +100,9 @@ const APP: () = {
         let mydma = cx.device.DMA1;
         let myspi = cx.device.SPI2;
 
-        //var gamma = new Uint16Array(256);
-        //for (var i=0.0;i<256;i=i+1.0) gamma[i]=Math.round(Math.pow(i/255.0,2.8)*65535);
-        //16 gamma corrected Brightness values 
-        let _gamma: [u16; 16] = [0, 33, 232, 723, 1619, 3024, 5038, 7757,
-                                11274, 15678, 21058, 27499, 35085, 43899, 54023, 65535];
-
-
         // Configure our clocks
-        cortex_m::asm::bkpt();
         clocksetup::clocksetup(&myrcc, &myflash);
-        cortex_m::asm::bkpt();
+        //cortex_m::asm::bkpt();
         // Stop all timers on debug halt for better debugging
         timersetup::timer234debugstop(&mydbgmcu);
         // Setup GPIOB (LEDs and timer3 CC1 input)
@@ -94,6 +116,22 @@ const APP: () = {
         let mut dmabufa = DMAbuffer([0; BUFLEN]);
         let mut dmabufb = DMAbuffer([0; BUFLEN]);
         let mut dmabufc = DMAbuffer([0; BUFLEN]);
+        for i in 0..COLS/2 {
+            dmabufa.set_col(i);
+            dmabufb.set_col(i);
+            dmabufc.set_col(i);
+        } 
+        for i in 0..COLS/2 {
+            dmabufa.set_col(COLS/2+i);
+            dmabufb.set_col(COLS/2+i);
+            dmabufc.set_col(COLS/2+i);
+        } 
+
+        //for i in 0..14 {
+        //    write_reg!(stm32ral::spi, myspi, DR, dmabufa.0[i] as u32);
+        //    block_until! { read_reg!(stm32ral::spi, myspi, SR, TXE == Empty) }
+        //}
+
         // Safety these raw pointers point to static initialized Memory buffers so they are always valid
         // They get passed back and forth between idle and interrrupt handler 
         // and only the code wich has the pointer can access the buffer.
@@ -151,7 +189,7 @@ const APP: () = {
                 if cx.resources.idle_producer.enqueue(next_buffer).is_err() {panic!("idle to dma queue full!")};
             // We dindn't get a buffer nothing to do but sleep
             } else {
-                cortex_m::asm::wfi();
+                //cortex_m::asm::wfi();
             }
         }
     }
