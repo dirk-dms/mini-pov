@@ -26,8 +26,8 @@ pub fn portconfig(rcc: &stm32ral::rcc::Instance, gpio: &stm32ral::gpio::Instance
 
     //set open drain output mode for pin B0 (FET control) for the FAN
     // drive '0' for off, high Z is on.
-    //write_reg!(stm32ral::gpio, gpio, BSRR, BR0: Reset); //0 is 0 = FAN on
-    write_reg!(stm32ral::gpio, gpio, BSRR, BS0: Set); //1 is High Z = FAN off
+    write_reg!(stm32ral::gpio, gpio, BSRR, BR0: Reset); //0 is 0 = FAN on
+    //write_reg!(stm32ral::gpio, gpio, BSRR, BS0: Set); //1 is High Z = FAN off
     modify_reg!(stm32ral::gpio, gpio, PUPDR, PUPDR0: PullUp);
     modify_reg!(stm32ral::gpio, gpio, OTYPER, OT0: OpenDrain);
     modify_reg!(stm32ral::gpio, gpio, MODER, MODER0: Output);
@@ -39,13 +39,13 @@ pub fn timerconfig(
     tim4: &stm32ral::tim4::Instance,
 ) {
     const SPIDIV: u32 = 16;
-    const BYTEDIV: u32 = SPIDIV * 8;
+    const U16DIV: u32 = SPIDIV * 16;
 
-    const TIM4PERIOD: u32 = 2; //period is 2, generate 1 DMA strobe per Byte / Update event
-    const TIM4DIV: u32 = BYTEDIV / TIM4PERIOD; //count at double the bytefrequency
+    const TIM4PERIOD: u32 = 2; //period is 2, generate 1 DMA strobe per U16 / Update event
+    const TIM4DIV: u32 = U16DIV / TIM4PERIOD; //count at double the U16 frequency
 
-    const TIM2PERIOD: u32 = 16; //16*4 = 64 Bytes intervall with 28 Bytes data
-    const TIM2DIV: u32 = BYTEDIV * 4; //counts in 4 Byte steps
+    const TIM2PERIOD: u32 = 16; //16*2 = 32 U16 intervall with 28 Bytes data
+    const TIM2DIV: u32 = U16DIV * 2; //counts in 2 U16 steps
 
     const TIM3PERIOD: u32 = 129; //128 collums image and one collumn off
     const TIM3DIV: u32 = TIM2DIV * TIM2PERIOD; //counts image collumns

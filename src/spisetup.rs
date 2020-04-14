@@ -37,7 +37,7 @@ pub fn spiconfig(
         CPOL: IdleLow,
         CRCEN: Disabled,
         CRCNEXT: TxBuffer,
-        DFF: EightBit,
+        DFF: SixteenBit,
         LSBFIRST: MSBFirst,
         MSTR: Master,
         RXONLY: FullDuplex,
